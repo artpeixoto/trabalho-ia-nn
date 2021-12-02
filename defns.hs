@@ -1,0 +1,3 @@
+
+class MM a where
+    
