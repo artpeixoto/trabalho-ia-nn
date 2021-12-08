@@ -1,27 +1,21 @@
-import tensorflow as tf2
-import tensorflow.keras as keras
-from tensorflow.keras import (losses, layers, metrics, optimizers)
-import numpy as np
-import pandas
-from pathlib import Path
-import os
+import wry
+from arturs_little_helpers import *
+import matplotlib.pyplot as plt
+import seaborn as sb
+import random
+import copy
 
-rede = keras.Sequential([
-        layers.InputLayer(3),
-        layers.Dense(units= 10, activation="sigmoid"),
-        layers.Dense(units=1, activation="sigmoid")
-        ]
-    )
+random.seed(420)
+#---------------------------------------------------
+# definições do problema
 
+args =  copy.deepcopy(wry.base_args) 
+args["BATCH_SIZE"] = 200
+args["NUM_EPOCHS"] = 100
 
-rede.compile(
-        optimizer=
-            optimizers.SGD(learning_rate=0.1),
-        loss=keras.losses.MeanSquaredError()
-    )
-
-
-
+results = wry.main(**args)
+losses = wry.get_losses(results)
+fig = plt.figure()
+plt.plot(losses, 'o')
+fig.show()
 #01)
-#treinando
-for i in range(5)
