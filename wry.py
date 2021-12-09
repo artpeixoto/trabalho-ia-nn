@@ -61,7 +61,7 @@ def generate_parms_generator(generator_fn):
     return lambda shapes, **kwargs: [generator_fn(shape=sh, **kwargs) for sh in shapes]
 
 def get_random_indexes(dataset_len):
-    rand_indexes = random.sample(range(dataset_len), len(dataset_len))
+    rand_indexes = random.sample(range(dataset_len),dataset_len)
     return rand_indexes
 
 
@@ -105,10 +105,13 @@ def main(defns: ProblemDefns):
         neural_net = tf.function(make_neural_net_function(defns.NEURAL_NET_ACTIVATIONS))
     epochs_results= []
     #main looping
+    loop_n = 0
     for epoch in range(defns.NUM_EPOCHS):
         batches_results = []
-        for x_train_batch, y_train_batch in zip(get_batches_generator(defns.BATCH_SIZE, x_train.T), \
-                get_batches_generator(defns.BATCH_SIZE, y_train)):#FIXME
+        shuffle_indexes = get_random_indexes(len(x_train.T))
+        for x_train_batch, y_train_batch in zip(get_batches_generator(defns.BATCH_SIZE, x_train.T[shuffle_indexes]), \
+                get_batches_generator(defns.BATCH_SIZE, y_train[shuffle_indexes])):
+            
             execution_results = nn_evaluate_execution(
                 neural_net = neural_net, \
                 parms = parms, \
@@ -117,15 +120,17 @@ def main(defns: ProblemDefns):
                 loss_function = defns.LOSS_FUNCTION, \
                 )
             i_parms = parms
-            iplus1_parms = [sgd(parm, grad,update_amount=defns.UPDATE_RATIO)
+            iplus1_parms = [sgd(parm, grad, update_amount=defns.UPDATE_RATIO)
                             for parm, grad in zip(parms, execution_results["parm_grads"])]
             parms = iplus1_parms
             batches_results.append(dict(
+                loop_n=loop_n,
                 parms = i_parms,
                 next_parms = iplus1_parms,
                 **execution_results
                 )
             )
+            loop_n += 1
         epochs_results += batches_results
     return epochs_results, neural_net
 
