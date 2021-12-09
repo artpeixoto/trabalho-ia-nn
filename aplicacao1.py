@@ -1,5 +1,5 @@
 import wry
-from arturs_little_helpers import *
+from santas_little_helpers import *
 import matplotlib.pyplot as plt
 import seaborn as sb
 import random

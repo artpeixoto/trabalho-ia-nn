@@ -1,6 +1,8 @@
-_from pathlib import Path
+from pathlib import Path
 import pandas
 import tensorflow as tf
+import numpy as np
+from numpy import array
 #---------------------------------------------------
 # importando os dados
 
@@ -14,15 +16,17 @@ dataset_file = open(dataset_path, "rb")
 data = [
         pandas.read_excel(
             io=dataset_file,
-            sheet_name=sheet
+            sheet_name=sheet_name
             )
-        for sheet in ["DadosTreinamentoRNA", "DadosTesteRNA"]]
+            
+        for sheet_name in ["DadosTreinamentoRNA", "DadosTesteRNA"]]
 
 #-------------------------------------------------
 #funcao ajudante
 def separate_xy (t):
-    return  (t[:,1:4].T, t[:,4])
+    return ((t[:,1:4].T, t[:,4][:]))
 #-------------------------------------------------
+
 def get_data():
-    train, test = [separate_xy( tf.constant(table.to_numpy())) for table in data]
-    return train, test
+    return [separate_xy((table.to_numpy())) for table in data]
+    
