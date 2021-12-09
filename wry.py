@@ -85,7 +85,14 @@ def nn_evaluate_execution(neural_net, parms, x_train, y_train, loss_function):
         errors = y_train - y_pred
         losses = loss_function(errors)
     parm_grads = tape.gradient(losses, parms)
-    return locals()
+    return dict(
+        x_train = x_train,
+        y_train = y_train,
+        y_pred = y_pred,
+        errors = errors,
+        losses = losses,
+        parm_grads = parm_grads,
+    )
 
 def main(defns: ProblemDefns):
     (x_train, y_train), (x_test, y_test)  = train, test = defns.DATA
@@ -100,25 +107,27 @@ def main(defns: ProblemDefns):
     #main looping
     for epoch in range(defns.NUM_EPOCHS):
         batches_results = []
-        for x_train_batch, y_train_batch in get_batches_generator(defns.BATCH_SIZE, train):
+        for x_train_batch, y_train_batch in zip(get_batches_generator(defns.BATCH_SIZE, x_train.T), \
+                get_batches_generator(defns.BATCH_SIZE, y_train)):#FIXME
             execution_results = nn_evaluate_execution(
                 neural_net = neural_net, \
                 parms = parms, \
-                x_train = x_train, \
-                y_train = y_train, \
+                x_train = x_train_batch.T, \
+                y_train = y_train_batch, \
                 loss_function = defns.LOSS_FUNCTION, \
                 )
             i_parms = parms
-            iplus1_parms = [sgd(parm, grad, defns.UPDATE_RATIO)
+            iplus1_parms = [sgd(parm, grad,update_amount=defns.UPDATE_RATIO)
                             for parm, grad in zip(parms, execution_results["parm_grads"])]
             parms = iplus1_parms
             batches_results.append(dict(
                 parms = i_parms,
                 next_parms = iplus1_parms,
-                execution_results=execution_results,
-                ))
-        epochs_results.append(batches_results)
-    return flatten(epochs_results)
+                **execution_results
+                )
+            )
+        epochs_results += batches_results
+    return epochs_results, neural_net
 
 if __name__ == "__main__":
     basic_definitions = ProblemDefns()
