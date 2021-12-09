@@ -97,6 +97,7 @@ def main(defns: ProblemDefns):
     if not neural_net:
         neural_net = tf.function(make_neural_net_function(defns.NEURAL_NET_ACTIVATIONS))
     epochs_results= []
+    #main looping
     for epoch in range(defns.NUM_EPOCHS):
         batches_results = []
         for x_train_batch, y_train_batch in get_batches_generator(defns.BATCH_SIZE, train):
@@ -107,11 +108,21 @@ def main(defns: ProblemDefns):
                 y_train = y_train, \
                 loss_function = defns.LOSS_FUNCTION, \
                 )
-        epochs_results.append(batches_results)\
-    return locals()
+            i_parms = parms
+            iplus1_parms = [sgd(parm, grad, defns.UPDATE_RATIO)
+                            for parm, grad in zip(parms, execution_results["parm_grads"])]
+            parms = iplus1_parms
+            batches_results.append(dict(
+                parms = i_parms,
+                next_parms = iplus1_parms,
+                execution_results=execution_results,
+                ))
+        epochs_results.append(batches_results)
+    return flatten(epochs_results)
 
 if __name__ == "__main__":
     basic_definitions = ProblemDefns()
     import get_data
     basic_definitions.DATA = [[array(j) for j in i] for i in get_data.get_data()]
-    locals().update(main(basic_definitions))
+    print(main(basic_definitions))
+    
